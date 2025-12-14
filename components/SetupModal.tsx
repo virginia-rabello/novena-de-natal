@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Upload, X, RotateCcw, Sparkles } from 'lucide-react';
+import { Settings, Upload, X, RotateCcw, Sparkles, Link as LinkIcon } from 'lucide-react';
 import { EventData } from '../types';
 
 interface SetupModalProps {
@@ -33,6 +33,7 @@ const SetupModal: React.FC<SetupModalProps> = ({
   const [description, setDescription] = useState(currentData.description);
   const [notes, setNotes] = useState(currentData.notes || "");
   const [file, setFile] = useState<File | null>(null);
+  const [pdfUrlInput, setPdfUrlInput] = useState(currentData.pdfUrl || "");
 
   useEffect(() => {
     if (!isOpen) {
@@ -40,19 +41,33 @@ const SetupModal: React.FC<SetupModalProps> = ({
       setDate(formatForInput(currentData.targetDate));
       setDescription(currentData.description);
       setNotes(currentData.notes || "");
+      setPdfUrlInput(currentData.pdfUrl || "");
+      setFile(null);
     }
   }, [currentData, isOpen]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
+      // Clear manual URL if file is picked to avoid confusion
+      setPdfUrlInput(""); 
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const pdfUrl = file ? URL.createObjectURL(file) : currentData.pdfUrl;
-    const fileName = file ? file.name : currentData.fileName;
+    
+    // Logic: If a file is uploaded, use blob. If text is entered, use text. Fallback to existing.
+    let finalPdfUrl = currentData.pdfUrl;
+    let finalFileName = currentData.fileName;
+
+    if (file) {
+      finalPdfUrl = URL.createObjectURL(file);
+      finalFileName = file.name;
+    } else if (pdfUrlInput && pdfUrlInput !== currentData.pdfUrl) {
+      finalPdfUrl = pdfUrlInput;
+      finalFileName = "Documento Online (Link)";
+    }
     
     onSave({
       title,
@@ -61,8 +76,8 @@ const SetupModal: React.FC<SetupModalProps> = ({
       targetDate: new Date(date),
       description,
       notes,
-      pdfUrl,
-      fileName
+      pdfUrl: finalPdfUrl,
+      fileName: finalFileName
     });
     setIsOpen(false);
   };
@@ -150,28 +165,50 @@ const SetupModal: React.FC<SetupModalProps> = ({
              />
           </div>
 
-          <div>
-            <label className="block text-slate-700 font-bold mb-2">Enviar Documento PDF</label>
-            <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:bg-slate-50 transition-colors relative">
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={handleFileChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-              <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-              <p className="text-slate-600 font-medium">
-                {file 
-                  ? `Selecionado: ${file.name}` 
-                  : (currentData.fileName 
-                      ? `Atual: ${currentData.fileName}` 
-                      : "Selecionar PDF")
-                }
-              </p>
+          <div className="border-t pt-4">
+            <label className="block text-slate-700 font-bold mb-2">Documento PDF</label>
+            <p className="text-sm text-slate-500 mb-3">
+              Para compartilhar com outras pessoas, o arquivo deve estar na internet (Google Drive, Dropbox, ou no site). O upload abaixo é apenas para visualização local.
+            </p>
+
+            <div className="space-y-3">
+              {/* URL Input */}
+              <div className="flex items-center gap-2">
+                <LinkIcon className="w-5 h-5 text-slate-400" />
+                <input 
+                  type="text"
+                  placeholder="Cole aqui o link público do PDF (ex: Google Drive)"
+                  value={pdfUrlInput}
+                  onChange={(e) => {
+                    setPdfUrlInput(e.target.value);
+                    setFile(null); // Clear file if typing URL
+                  }}
+                  className="w-full border-2 border-slate-300 rounded-lg p-2 text-sm focus:border-accessible-blue outline-none"
+                />
+              </div>
+
+              <div className="text-center text-slate-400 font-bold text-xs">OU</div>
+
+              {/* File Upload */}
+              <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 transition-colors relative">
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <Upload className="w-6 h-6 mx-auto text-slate-400 mb-1" />
+                <p className="text-slate-600 font-medium text-sm">
+                  {file 
+                    ? `Selecionado: ${file.name}` 
+                    : "Escolher arquivo do dispositivo (Local)"
+                  }
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 pt-2">
+          <div className="flex flex-col gap-3 pt-4">
             <button
               type="submit"
               className="w-full bg-accessible-blue hover:bg-blue-800 text-white font-bold text-xl py-4 rounded-lg shadow transition-colors"

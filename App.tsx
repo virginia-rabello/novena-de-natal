@@ -6,11 +6,6 @@ import { EventData } from './types';
 import { Info, Share2, MessageCircleHeart, Save, Gift } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
-// Import the PDF file directly. 
-// This ensures the build tool bundles it and generates the correct URL.
-// @ts-ignore
-import pdfFile from './Folheto_Novena_2025.pdf';
-
 // --- CONFIGURATION AREA (EDIT THIS FOR EVERYONE) ---
 const EVENT_CONFIG = {
   // 1. Event Date & Time (Start of the first day)
@@ -28,7 +23,8 @@ const EVENT_CONFIG = {
   defaultDescription: "Bem-vindos. Participe da video chamada no Whatsapp e baixe o folheto para rezar conosco.",
   
   // 3. File / PDF Details
-  pdfUrl: pdfFile, // Use the imported file
+  // IMPORTANT: This must be a path to a file in the public folder or a full URL.
+  pdfUrl: "./Folheto_Novena_2025.pdf", 
   fileName: "Folheto_Novena_2025.pdf",
 
   // 4. Advanced Logic
