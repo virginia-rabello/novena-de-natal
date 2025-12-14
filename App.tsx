@@ -24,7 +24,7 @@ const EVENT_CONFIG = {
   
   // 3. File / PDF Details
   // IMPORTANT: This must be a path to a file in the public folder or a full URL.
-  pdfUrl: "./Folheto_Novena_2025.pdf", 
+  pdfUrl: "https://drive.google.com/file/d/1uIPXcjDKpkKRQrn9HZg9uR6RCg_SfwL-/view?usp=sharing", 
   fileName: "Folheto_Novena_2025.pdf",
 
   // 4. Advanced Logic
