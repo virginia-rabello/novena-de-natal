@@ -482,6 +482,7 @@ const App: React.FC = () => {
       <footer 
         className="mt-12 py-8 text-center text-slate-500 text-sm md:text-base border-t border-slate-200 select-none"
       >
+        <p className="mb-2 text-slate-600 font-medium">✨ Feliz Natal para você e sua família! ✨</p>
         <p onClick={handleSecretClick} className="cursor-pointer inline-block">
           Projetado para acessibilidade e facilidade de uso.
         </p>
