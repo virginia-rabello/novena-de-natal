@@ -124,7 +124,7 @@ const App: React.FC = () => {
   const handleSecretClick = () => {
     setSecretClickCount(prev => {
       const newCount = prev + 1;
-      if (newCount >= 5) {
+      if (newCount >= 3) { // Trigger after 3 clicks
         setIsAdminVisible(true);
         return 0;
       }
@@ -475,12 +475,24 @@ const App: React.FC = () => {
       />
       
       <footer 
-        className="mt-12 py-8 text-center text-slate-500 text-sm md:text-base border-t border-slate-200 select-none cursor-default"
-        onClick={handleSecretClick}
+        className="mt-12 py-8 text-center text-slate-500 text-sm md:text-base border-t border-slate-200 select-none"
       >
-        <p>Projetado para acessibilidade e facilidade de uso.</p>
-        {secretClickCount > 0 && secretClickCount < 5 && (
-           <span className="text-xs text-slate-300">...</span>
+        <p onClick={handleSecretClick} className="cursor-pointer inline-block">
+          Projetado para acessibilidade e facilidade de uso.
+        </p>
+
+        {/* Visible Admin Link */}
+        <div className="mt-4">
+           <button 
+             onClick={() => setIsAdminVisible(true)}
+             className="text-slate-300 hover:text-slate-500 text-xs transition-colors underline"
+           >
+             Gerenciar Evento
+           </button>
+        </div>
+
+        {secretClickCount > 0 && secretClickCount < 3 && (
+           <span className="text-xs text-slate-300 block mt-2">...</span>
         )}
       </footer>
     </div>

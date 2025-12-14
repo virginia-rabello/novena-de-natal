@@ -80,7 +80,7 @@ const SetupModal: React.FC<SetupModalProps> = ({
     return (
       <button 
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 p-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-full shadow-lg z-50 transition-colors opacity-80 hover:opacity-100 animate-fade-in"
+        className="fixed bottom-4 right-4 p-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-full shadow-lg z-[60] transition-colors opacity-80 hover:opacity-100 animate-fade-in"
         title="Editar Configurações do Evento"
       >
         <Settings className="w-6 h-6" />
