@@ -7,26 +7,41 @@ interface PdfViewerProps {
 }
 
 const PdfViewer: React.FC<PdfViewerProps> = ({ pdfUrl, fileName }) => {
-  // Helper to detect Google Drive links and convert to preview mode
+  // Helper to determine the best way to embed the file based on the URL type
   const getEmbedConfig = (url: string | null) => {
-    if (!url) return { url: '', isIframe: false };
+    if (!url) return { url: '', isIframe: false, isGoogleDocs: false };
 
-    // Regex to extract ID from common Google Drive URL patterns
+    // 1. Google Drive Links
+    // We convert these to the 'preview' endpoint which renders a nice UI in an iframe
     const driveMatch = url.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|docs\.google\.com\/file\/d\/)([^/&?]+)/);
     
     if (driveMatch && driveMatch[1]) {
-      // Convert to preview URL which is embeddable via iframe
       return { 
         url: `https://drive.google.com/file/d/${driveMatch[1]}/preview`, 
-        isIframe: true 
+        isIframe: true,
+        isGoogleDocs: false
       };
     }
 
-    // Default behavior for direct PDF links or Blobs
-    return { url, isIframe: false };
+    // 2. Local Blobs (Files uploaded from device)
+    // These CANNOT be sent to Google Docs Viewer because they are local to the browser.
+    // We must use <object> for these. Mobile support is limited.
+    if (url.startsWith('blob:')) {
+      return { url, isIframe: false, isGoogleDocs: false };
+    }
+
+    // 3. Generic Public URLs (e.g., website.com/file.pdf, Dropbox direct links, etc.)
+    // For mobile compatibility, we pass these through Google Docs Viewer.
+    // This forces the PDF to render as HTML/Images inside an iframe, working on 100% of devices.
+    const googleDocsViewer = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+    return {
+      url: googleDocsViewer,
+      isIframe: true,
+      isGoogleDocs: true
+    };
   };
 
-  const { url: embedUrl, isIframe } = getEmbedConfig(pdfUrl);
+  const { url: embedUrl, isIframe, isGoogleDocs } = getEmbedConfig(pdfUrl);
 
   if (!pdfUrl) {
     return (
@@ -55,7 +70,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ pdfUrl, fileName }) => {
           </div>
         </div>
         
-        {/* Action Buttons */}
+        {/* Action Buttons - These are crucial for Mobile users where embeds might fail */}
         <div className="flex flex-col md:flex-row gap-4 w-full">
           <a 
             href={pdfUrl} 
@@ -80,25 +95,34 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ pdfUrl, fileName }) => {
         </div>
         
         <p className="text-slate-500 text-sm italic">
-          * Dica: Se o documento não aparecer abaixo (comum em celulares), use o botão "Abrir em Nova Aba" ou "Baixar PDF".
+          * Dica: Se estiver no celular e a visualização abaixo não carregar, use o botão "Abrir em Nova Aba".
         </p>
       </div>
 
-      {/* Embedded Viewer (Desktop mainly) */}
+      {/* Embedded Viewer */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden border-2 border-slate-200">
-        <div className="bg-slate-100 p-4 border-b border-slate-200 flex items-center gap-3">
-          <Eye className="w-6 h-6 text-slate-700" />
-          <h4 className="text-xl font-bold text-slate-800">Pré-visualização</h4>
+        <div className="bg-slate-100 p-4 border-b border-slate-200 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Eye className="w-6 h-6 text-slate-700" />
+            <h4 className="text-xl font-bold text-slate-800">Pré-visualização</h4>
+          </div>
+          {isGoogleDocs && (
+             <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded font-bold uppercase">Modo de Compatibilidade</span>
+          )}
         </div>
-        <div className="w-full h-[600px] md:h-[800px] bg-slate-50 relative">
+        
+        <div className="w-full h-[500px] md:h-[800px] bg-slate-50 relative">
           {isIframe ? (
              <iframe 
                src={embedUrl} 
                className="w-full h-full border-0" 
                title="Visualização do Documento" 
-               allow="autoplay"
+               allow="autoplay; fullscreen"
+               loading="lazy"
+               referrerPolicy="no-referrer"
              />
           ) : (
+            /* Fallback for Blobs or Browser Native Object */
             <object
               data={embedUrl}
               type="application/pdf"
@@ -108,10 +132,10 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ pdfUrl, fileName }) => {
               <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-slate-50">
                 <FileText className="w-16 h-16 text-slate-300 mb-4" />
                 <p className="text-xl text-slate-700 mb-2 font-medium">
-                  Visualização integrada não disponível neste navegador.
+                  Não foi possível carregar a visualização aqui.
                 </p>
-                <p className="text-slate-500 mb-6">
-                  Não se preocupe! Você ainda pode acessar o arquivo.
+                <p className="text-slate-500 mb-6 max-w-md">
+                  Arquivos locais podem não ser exibidos diretamente em alguns navegadores móveis.
                 </p>
                 <a 
                   href={pdfUrl} 
@@ -119,7 +143,7 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ pdfUrl, fileName }) => {
                   rel="noopener noreferrer"
                   className="bg-accessible-blue text-white font-bold text-lg px-6 py-3 rounded-lg shadow hover:bg-blue-800 transition-colors"
                 >
-                  Abrir Documento
+                  Abrir Arquivo Manualmente
                 </a>
               </div>
             </object>
