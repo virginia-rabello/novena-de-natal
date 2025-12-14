@@ -127,9 +127,9 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ targetDate, title, chri
           </div>
         </div>
 
-        {/* Countdown Grid (Days removed, cols adjusted to 2) */}
-        <div className="grid grid-cols-2 gap-2 md:gap-4 max-w-xl mx-auto">
-          {/* Note: Days removed as per request */}
+        {/* Countdown Grid */}
+        <div className="grid grid-cols-3 gap-2 md:gap-4 max-w-xl mx-auto">
+          <TimeUnit value={timeLeft.days} label="Dias" />
           <TimeUnit value={timeLeft.hours} label="Horas" />
           <TimeUnit value={timeLeft.minutes} label="Minutos" />
         </div>
