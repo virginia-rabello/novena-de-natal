@@ -11,7 +11,7 @@ const EVENT_CONFIG = {
   // 1. Event Date & Time (Start of the first day)
   year: 2025,
   month: 11,     // Note: 0 = January, 11 = December
-  day: 14,       // Day of the month
+  day: 15,       // Day of the month (Updated to start one day later)
   hour: 20,      // 24-hour format (20 = 8 PM)
   minute: 30,    // Minute
   
