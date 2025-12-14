@@ -7,6 +7,27 @@ interface PdfViewerProps {
 }
 
 const PdfViewer: React.FC<PdfViewerProps> = ({ pdfUrl, fileName }) => {
+  // Helper to detect Google Drive links and convert to preview mode
+  const getEmbedConfig = (url: string | null) => {
+    if (!url) return { url: '', isIframe: false };
+
+    // Regex to extract ID from common Google Drive URL patterns
+    const driveMatch = url.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|docs\.google\.com\/file\/d\/)([^/&?]+)/);
+    
+    if (driveMatch && driveMatch[1]) {
+      // Convert to preview URL which is embeddable via iframe
+      return { 
+        url: `https://drive.google.com/file/d/${driveMatch[1]}/preview`, 
+        isIframe: true 
+      };
+    }
+
+    // Default behavior for direct PDF links or Blobs
+    return { url, isIframe: false };
+  };
+
+  const { url: embedUrl, isIframe } = getEmbedConfig(pdfUrl);
+
   if (!pdfUrl) {
     return (
       <div className="bg-slate-200 border-4 border-slate-300 border-dashed rounded-xl p-12 text-center text-slate-500">
@@ -70,30 +91,39 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ pdfUrl, fileName }) => {
           <h4 className="text-xl font-bold text-slate-800">Pré-visualização</h4>
         </div>
         <div className="w-full h-[600px] md:h-[800px] bg-slate-50 relative">
-          <object
-            data={pdfUrl}
-            type="application/pdf"
-            className="w-full h-full"
-            aria-label="Pré-visualização do Documento PDF"
-          >
-            <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-slate-50">
-              <FileText className="w-16 h-16 text-slate-300 mb-4" />
-              <p className="text-xl text-slate-700 mb-2 font-medium">
-                Visualização integrada não disponível neste navegador.
-              </p>
-              <p className="text-slate-500 mb-6">
-                Não se preocupe! Você ainda pode acessar o arquivo.
-              </p>
-              <a 
-                href={pdfUrl} 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-accessible-blue text-white font-bold text-lg px-6 py-3 rounded-lg shadow hover:bg-blue-800 transition-colors"
-              >
-                Abrir Documento
-              </a>
-            </div>
-          </object>
+          {isIframe ? (
+             <iframe 
+               src={embedUrl} 
+               className="w-full h-full border-0" 
+               title="Visualização do Documento" 
+               allow="autoplay"
+             />
+          ) : (
+            <object
+              data={embedUrl}
+              type="application/pdf"
+              className="w-full h-full"
+              aria-label="Pré-visualização do Documento PDF"
+            >
+              <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-slate-50">
+                <FileText className="w-16 h-16 text-slate-300 mb-4" />
+                <p className="text-xl text-slate-700 mb-2 font-medium">
+                  Visualização integrada não disponível neste navegador.
+                </p>
+                <p className="text-slate-500 mb-6">
+                  Não se preocupe! Você ainda pode acessar o arquivo.
+                </p>
+                <a 
+                  href={pdfUrl} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-accessible-blue text-white font-bold text-lg px-6 py-3 rounded-lg shadow hover:bg-blue-800 transition-colors"
+                >
+                  Abrir Documento
+                </a>
+              </div>
+            </object>
+          )}
         </div>
       </div>
     </div>
