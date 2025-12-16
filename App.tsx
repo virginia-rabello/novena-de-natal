@@ -11,7 +11,7 @@ const EVENT_CONFIG = {
   // 1. Event Date & Time (Start of the first day)
   year: 2025,
   month: 11,     // Note: 0 = January, 11 = December
-  day: 15,       // Day of the month (Updated to start one day later)
+  day: 15,       // Day of the month
   hour: 20,      // 24-hour format (20 = 8 PM)
   minute: 30,    // Minute
   
@@ -38,8 +38,14 @@ const ORDINAL_DAYS = [
   "Sexto", "Sétimo", "Oitavo", "Nono"
 ];
 
+// --- DAILY NOTES REPOSITORY ---
+// Add new summaries here as the days pass.
 const DEFAULT_NOTES: Record<number, string> = {
-  0: "Hoje refletimos sobre fé e disponibilidade para Deus, inspirados pelo 'sim' de Maria e sua confiança plena. Discutimos que estar disponível significa priorizar o compromisso com Deus acima de futilidades e cultivar a gratidão constante para sentir Sua presença. Relembramos que, com uma fé do tamanho de uma semente de mostarda, podemos mover montanhas, e concluímos sobre a importância de entregar todas as nossas preocupações a Ele, confiando em Sua vontade."
+  // Day 0 (15/12)
+  0: "Hoje refletimos sobre fé e disponibilidade para Deus, inspirados pelo 'sim' de Maria e sua confiança plena. Discutimos que estar disponível significa priorizar o compromisso com Deus acima de futilidades e cultivar a gratidão constante para sentir Sua presença. Relembramos que, com uma fé do tamanho de uma semente de mostarda, podemos mover montanhas, e concluímos sobre a importância de entregar todas as nossas preocupações a Ele, confiando em Sua vontade.",
+  
+  // Day 1 (16/12)
+  // 1: "Resumo do segundo dia...",
 };
 
 // Helper to get notes from storage
@@ -78,14 +84,14 @@ const calculateEventState = () => {
     const isoDateString = `${EVENT_CONFIG.year}-${monthStr}-${dayStr}T${hourStr}:${minStr}:00${EVENT_CONFIG.timezoneOffset}`;
     const targetDate = new Date(isoDateString);
     
-    const eventEnd = new Date(targetDate);
-    // Updated to use minutes for duration
-    eventEnd.setMinutes(targetDate.getMinutes() + EVENT_CONFIG.eventDurationMinutes);
+    // Robust calculation using timestamps to avoid edge cases with setMinutes
+    // Adds minutes converted to milliseconds
+    const eventEnd = new Date(targetDate.getTime() + (EVENT_CONFIG.eventDurationMinutes * 60 * 1000));
 
-    // If "now" is before the end of this event instance
-    if (now < eventEnd) {
+    // If "now" is before the end of this event instance (Timestamp comparison)
+    if (now.getTime() < eventEnd.getTime()) {
       const monthName = targetDate.toLocaleString('pt-BR', { month: 'long' });
-      const monthFormatted = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+      // const monthFormatted = monthName.charAt(0).toUpperCase() + monthName.slice(1); // Unused
       
       const dayLabel = `${ORDINAL_DAYS[i]} dia da Novena`;
       const displayTitle = `${EVENT_CONFIG.defaultTitle}`; // Title remains generic, subtitle changes
@@ -273,29 +279,47 @@ const App: React.FC = () => {
     setIsGenerating(true);
     const notesHistory = getStoredNotes();
     
+    // Check if we have notes
+    const validNotes = Object.entries(notesHistory)
+      .filter(([_, note]) => note && note.trim().length > 10); // Simple filter for valid content
+
+    if (validNotes.length === 0) {
+      alert("Adicione anotações nos dias da novena antes de gerar a mensagem.");
+      setIsGenerating(false);
+      return;
+    }
+
     // SORT notes to ensure Day 1 comes before Day 2, etc.
-    const notesText = Object.entries(notesHistory)
+    const notesText = validNotes
       .sort((a, b) => parseInt(a[0]) - parseInt(b[0])) 
-      .map(([index, note]) => `Dia ${parseInt(index) + 1}: ${note}`)
+      .map(([index, note]) => {
+        const dayNum = parseInt(index);
+        return `Dia ${dayNum + 1} (${ORDINAL_DAYS[dayNum]}): ${note}`;
+      })
       .join("\n\n");
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: `Você está escrevendo uma mensagem de Natal emocionante e calorosa para uma comunidade. 
+        contents: `Você é um assistente litúrgico ajudando a escrever uma Mensagem de Natal de encerramento para uma Novena.
         
-        Aqui estão as anotações e reflexões feitas durante os dias da Novena de Natal:
+        CONTEXTO:
+        Realizamos uma jornada de oração de 9 dias. Abaixo estão os resumos das reflexões espirituais feitas em cada dia.
+        
+        CAMINHADA ESPIRITUAL (RESUMOS):
         --------------------------
         ${notesText}
         --------------------------
         
-        INSTRUÇÕES:
-        1. Escreva um resumo inspirador que conecte os temas.
-        2. Certifique-se de considerar O CONTEÚDO DE CADA DIA fornecido para criar uma narrativa coesa. Não ignore nenhuma reflexão.
-        3. Termine com uma mensagem final de Feliz Natal.
-        4. O tom deve ser amigável, emocionante e adequado para leitura em público (como em uma igreja ou grupo familiar).
-        5. Use Markdown para formatação básica (negrito).`,
+        INSTRUÇÕES DE ESCRITA:
+        1. **Crie uma Narrativa Coesa**: Não faça apenas uma lista. Escreva um texto fluido que mostre como começamos (Dia 1) e como crescemos espiritualmente até o final.
+        2. **Conecte os Temas**: Encontre o fio condutor entre os resumos fornecidos (ex: como a fé do primeiro dia levou à esperança do último).
+        3. **Referencie os Conteúdos**: Cite brevemente os ensinamentos específicos mencionados nos resumos para que a comunidade se lembre do que viveu.
+        4. **Tom de Voz**: Pastoral, acolhedor, emocionante e solene. Deve soar como um padre ou líder comunitário falando com carinho.
+        5. **Conclusão**: Termine desejando um Santo e Feliz Natal, celebrando o nascimento de Jesus.
+        
+        Formatação: Use Markdown (negrito para destacar sentimentos ou palavras-chave).`,
       });
       
       setGeneratedSummary(response.text);
@@ -336,6 +360,10 @@ const App: React.FC = () => {
       console.error('Error sharing:', err);
     }
   };
+
+  const availableNotes = Object.entries(getStoredNotes())
+    .filter(([_, note]) => note && note.trim().length > 0)
+    .sort(([a], [b]) => Number(a) - Number(b));
 
   return (
     <div className="min-h-screen pb-20">
@@ -393,42 +421,41 @@ const App: React.FC = () => {
           </div>
         </section>
 
-        {/* --- DAILY SUMMARY DIARY SECTION (NEW) --- */}
-        <section aria-label="Diário da Novena" className="mb-12">
-          <div className="flex items-center gap-4 mb-6">
-             <div className="h-1 flex-grow bg-slate-200 rounded-full"></div>
-             <h2 className="text-2xl font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <BookOpen className="w-6 h-6" />
-                Caminhada Diária
-             </h2>
-             <div className="h-1 flex-grow bg-slate-200 rounded-full"></div>
-          </div>
-          
-          <div className="space-y-6">
-            {Object.entries(getStoredNotes())
-               .filter(([_, note]) => note && note.trim().length > 0)
-               .sort(([a], [b]) => Number(a) - Number(b)) // Sort by day index (0, 1, 2...)
-               .map(([dayIndexStr, note]) => {
-                  const i = Number(dayIndexStr);
-                  return (
-                     <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex gap-4 transition-all hover:shadow-md hover:border-slate-200">
-                        <div className="shrink-0 hidden md:block">
-                           <div className="bg-yellow-100 text-yellow-700 font-bold rounded-full w-12 h-12 flex items-center justify-center text-xl shadow-inner border border-yellow-200">
-                             {i + 1}º
-                           </div>
-                        </div>
-                        <div>
-                           <h3 className="font-bold text-slate-900 text-lg mb-2 flex items-center gap-2">
-                              <span className="md:hidden bg-yellow-100 text-yellow-700 rounded-full w-8 h-8 flex items-center justify-center text-sm border border-yellow-200">{i + 1}º</span>
-                              {ORDINAL_DAYS[i] || `Dia ${i+1}`}
-                           </h3>
-                           <p className="text-slate-700 leading-relaxed whitespace-pre-line text-lg">{note}</p>
-                        </div>
-                     </div>
-                  );
-            })}
-          </div>
-        </section>
+        {/* --- DAILY SUMMARY DIARY SECTION --- */}
+        {availableNotes.length > 0 && (
+          <section aria-label="Diário da Novena" className="mb-12 animate-fade-in">
+            <div className="flex items-center gap-4 mb-6">
+               <div className="h-1 flex-grow bg-slate-200 rounded-full"></div>
+               <h2 className="text-2xl font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <BookOpen className="w-6 h-6" />
+                  Caminhada Diária
+               </h2>
+               <div className="h-1 flex-grow bg-slate-200 rounded-full"></div>
+            </div>
+            
+            <div className="space-y-6">
+              {availableNotes.map(([dayIndexStr, note]) => {
+                    const i = Number(dayIndexStr);
+                    return (
+                       <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex gap-4 transition-all hover:shadow-md hover:border-slate-200">
+                          <div className="shrink-0 hidden md:block">
+                             <div className="bg-yellow-100 text-yellow-700 font-bold rounded-full w-12 h-12 flex items-center justify-center text-xl shadow-inner border border-yellow-200">
+                               {i + 1}º
+                             </div>
+                          </div>
+                          <div>
+                             <h3 className="font-bold text-slate-900 text-lg mb-2 flex items-center gap-2">
+                                <span className="md:hidden bg-yellow-100 text-yellow-700 rounded-full w-8 h-8 flex items-center justify-center text-sm border border-yellow-200">{i + 1}º</span>
+                                {ORDINAL_DAYS[i] || `Dia ${i+1}`}
+                             </h3>
+                             <p className="text-slate-700 leading-relaxed whitespace-pre-line text-lg">{note}</p>
+                          </div>
+                       </div>
+                    );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* --- PUBLIC CHRISTMAS MESSAGE SECTION --- */}
         {eventData.christmasMessage && (
@@ -527,13 +554,24 @@ const App: React.FC = () => {
         </p>
 
         {/* Visible Admin Link */}
-        <div className="mt-4">
+        <div className="mt-4 flex flex-col items-center gap-2">
            <button 
              onClick={() => setIsAdminVisible(true)}
              className="text-slate-300 hover:text-slate-500 text-xs transition-colors underline"
            >
              Gerenciar Evento
            </button>
+           
+           {isManualOverride && (
+             <div className="mt-2">
+               <span className="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-full border border-amber-300">
+                 ⚠ Modo Manual Ativo
+               </span>
+               <p className="text-[10px] text-slate-400 mt-1 max-w-xs mx-auto">
+                 As configurações automáticas de data/hora estão pausadas. Use o botão "Gerenciar Evento" {'>'} "Restaurar Automático" para voltar à programação normal.
+               </p>
+             </div>
+           )}
         </div>
 
         {secretClickCount > 0 && secretClickCount < 3 && (
