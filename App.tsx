@@ -3,7 +3,7 @@ import CountdownTimer from './components/CountdownTimer';
 import PdfViewer from './components/PdfViewer';
 import SetupModal from './components/SetupModal';
 import { EventData } from './types';
-import { Info, Share2, MessageCircleHeart, Save, Gift } from 'lucide-react';
+import { Info, Share2, MessageCircleHeart, Save, Gift, BookOpen } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 // --- CONFIGURATION AREA (EDIT THIS FOR EVERYONE) ---
@@ -29,7 +29,7 @@ const EVENT_CONFIG = {
 
   // 4. Advanced Logic
   durationDays: 9, 
-  eventWindowHours: 4 
+  eventDurationMinutes: 30 // Duration of each event in minutes
 };
 // ---------------------------------------------------
 
@@ -38,13 +38,18 @@ const ORDINAL_DAYS = [
   "Sexto", "Sétimo", "Oitavo", "Nono"
 ];
 
+const DEFAULT_NOTES: Record<number, string> = {
+  0: "Hoje refletimos sobre fé e disponibilidade para Deus, inspirados pelo 'sim' de Maria e sua confiança plena. Discutimos que estar disponível significa priorizar o compromisso com Deus acima de futilidades e cultivar a gratidão constante para sentir Sua presença. Relembramos que, com uma fé do tamanho de uma semente de mostarda, podemos mover montanhas, e concluímos sobre a importância de entregar todas as nossas preocupações a Ele, confiando em Sua vontade."
+};
+
 // Helper to get notes from storage
 const getStoredNotes = (): Record<number, string> => {
-  if (typeof window === 'undefined') return {};
+  if (typeof window === 'undefined') return DEFAULT_NOTES;
   try {
-    return JSON.parse(localStorage.getItem('novena_notes_history') || '{}');
+    const stored = JSON.parse(localStorage.getItem('novena_notes_history') || '{}');
+    return { ...DEFAULT_NOTES, ...stored };
   } catch {
-    return {};
+    return DEFAULT_NOTES;
   }
 };
 
@@ -74,7 +79,8 @@ const calculateEventState = () => {
     const targetDate = new Date(isoDateString);
     
     const eventEnd = new Date(targetDate);
-    eventEnd.setHours(targetDate.getHours() + EVENT_CONFIG.eventWindowHours);
+    // Updated to use minutes for duration
+    eventEnd.setMinutes(targetDate.getMinutes() + EVENT_CONFIG.eventDurationMinutes);
 
     // If "now" is before the end of this event instance
     if (now < eventEnd) {
@@ -362,7 +368,7 @@ const App: React.FC = () => {
                 {eventData.description}
               </p>
 
-              {/* Display Daily Notes if available */}
+              {/* Display Current Featured Note */}
               {eventData.notes && (
                 <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-8 rounded-r-lg">
                   <h3 className="text-lg font-bold text-yellow-800 mb-2 flex items-center gap-2">
@@ -384,6 +390,43 @@ const App: React.FC = () => {
                 Convidar Amigos
               </button>
             </div>
+          </div>
+        </section>
+
+        {/* --- DAILY SUMMARY DIARY SECTION (NEW) --- */}
+        <section aria-label="Diário da Novena" className="mb-12">
+          <div className="flex items-center gap-4 mb-6">
+             <div className="h-1 flex-grow bg-slate-200 rounded-full"></div>
+             <h2 className="text-2xl font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <BookOpen className="w-6 h-6" />
+                Caminhada Diária
+             </h2>
+             <div className="h-1 flex-grow bg-slate-200 rounded-full"></div>
+          </div>
+          
+          <div className="space-y-6">
+            {Object.entries(getStoredNotes())
+               .filter(([_, note]) => note && note.trim().length > 0)
+               .sort(([a], [b]) => Number(a) - Number(b)) // Sort by day index (0, 1, 2...)
+               .map(([dayIndexStr, note]) => {
+                  const i = Number(dayIndexStr);
+                  return (
+                     <div key={i} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex gap-4 transition-all hover:shadow-md hover:border-slate-200">
+                        <div className="shrink-0 hidden md:block">
+                           <div className="bg-yellow-100 text-yellow-700 font-bold rounded-full w-12 h-12 flex items-center justify-center text-xl shadow-inner border border-yellow-200">
+                             {i + 1}º
+                           </div>
+                        </div>
+                        <div>
+                           <h3 className="font-bold text-slate-900 text-lg mb-2 flex items-center gap-2">
+                              <span className="md:hidden bg-yellow-100 text-yellow-700 rounded-full w-8 h-8 flex items-center justify-center text-sm border border-yellow-200">{i + 1}º</span>
+                              {ORDINAL_DAYS[i] || `Dia ${i+1}`}
+                           </h3>
+                           <p className="text-slate-700 leading-relaxed whitespace-pre-line text-lg">{note}</p>
+                        </div>
+                     </div>
+                  );
+            })}
           </div>
         </section>
 
