@@ -45,7 +45,7 @@ const DEFAULT_NOTES: Record<number, string> = {
   0: "Hoje refletimos sobre fé e disponibilidade para Deus, inspirados pelo 'sim' de Maria e sua confiança plena. Discutimos que estar disponível significa priorizar o compromisso com Deus acima de futilidades e cultivar a gratidão constante para sentir Sua presença. Relembramos que, com uma fé do tamanho de uma semente de mostarda, podemos mover montanhas, e concluímos sobre a importância de entregar todas as nossas preocupações a Ele, confiando em Sua vontade.",
   
   // Day 1 (16/12)
-  // 1: "Resumo do segundo dia...",
+  1: "No segundo dia, refletimos sobre o silêncio necessário para ouvir a Deus, inspirados pela confiança de São José. Enquanto o grupo destacou a oração em retiro, acrescentamos que o silêncio vai além da ausência de barulho: é a quietude interior. Assim como José, que não se deixou levar pelo julgamento ou rancor ao saber de Maria, silenciar significa acalmar pensamentos negativos e ruídos internos. É essa pureza de espírito que nos torna capazes de discernir a voz divina e os sinais de Deus em nossa vida.",
 };
 
 // Helper to get notes from storage
