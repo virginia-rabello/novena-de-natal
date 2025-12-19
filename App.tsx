@@ -49,6 +49,9 @@ const DEFAULT_NOTES: Record<number, string> = {
 
   // Day 2 (17/12)
   2: "A visita de Maria a Isabel nos ensina que a fé autêntica se traduz em movimento e serviço prático. Assim como Maria partiu para cuidar, vemos a beleza de Deus no cuidado dedicado de uma filha à sua mãe idosa, no apoio essencial de uma mãe que chega em um momento difícil, de duas irmãs se apoiando na caminhada da vida. Seja através de um abraço, de uma mensagem de bom dia ou da nossa Novena de Natal, somos chamados a ser presença de consolo. Ao celebrarmos as vitórias uns dos outros, compreendemos que o amor se manifesta nos pequenos gestos e que, para Deus, o impossível é apenas o começo da nossa caminhada de apoio mútuo.",
+
+  // Day 3 (18/12)
+  3: "A jornada de Maria e José rumo a Belém demonstra que a fé não é ausência de incertezas, mas a coragem de caminhar sob a Providência Divina. Assim como eles enfrentaram o inesperado com obediência, a discussão nos levou a refletir sobre a gestão da ansiedade e a nossa ilusão de controle, aceitando que muitos caminhos já estão traçados por um propósito maior. A memória das ondas do mar, que parecem gigantes de longe mas se tornam superáveis quando chegam perto, ilustra que Deus nos concede a força exata para o momento presente. Que possamos confiar que, mesmo nos caminhos mais desafiadores, o propósito de Deus nos guia, transformando cada dificuldade em um sinal de Sua presença e cada medo em uma vitória vencida pela confiança.",
 };
 
 // Helper to get notes from storage
